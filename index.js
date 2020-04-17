@@ -9,19 +9,21 @@ function parseReqFile (reqFilePath, packagesList) {
 
   var packageEntry
   for (packageEntry in packagesListRaw) {
-    var packageName
-    var packageVersion
-    if (packagesListRaw[packageEntry].includes('==')) {
-      var packageEntrySplit = packagesListRaw[packageEntry].split('==')
-      packageName = packageEntrySplit[0].trim()
-      packageVersion = packageEntrySplit[1].trim()
-    } else {
-      packageName = packagesListRaw[packageEntry]
-      packageVersion = null
-    }
+    if (packagesListRaw[packageEntry].trim()) {
+      var packageName
+      var packageVersion
+      if (packagesListRaw[packageEntry].includes('==')) {
+        var packageEntrySplit = packagesListRaw[packageEntry].split('==')
+        packageName = packageEntrySplit[0].trim()
+        packageVersion = packageEntrySplit[1].trim()
+      } else {
+        packageName = packagesListRaw[packageEntry]
+        packageVersion = null
+      }
 
-    packagesList[packageName] = {}
-    packagesList[packageName].version = packageVersion
+      packagesList[packageName] = {}
+      packagesList[packageName].version = packageVersion
+    }
   }
 }
 
