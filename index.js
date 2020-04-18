@@ -77,7 +77,7 @@ function writeNewReqFile (reqFilePath, packagesList) {
   }
 }
 
-const push = async (reqFilePath) => {
+const push = async (reqFilePath, needBackup) => {
   core.startGroup('git config')
   await exec.exec('git config --global user.name github-actions')
   await exec.exec('git config --global user.email actions@github.com')
@@ -85,6 +85,7 @@ const push = async (reqFilePath) => {
 
   core.startGroup('git')
   await exec.exec(`git add ${reqFilePath}`)
+  if (needBackup) await exec.exec(`git add ${reqFilePath}.old`)
   await exec.exec('git commit -m "[auto] Required Python package update"')
   await exec.exec('git push -f -u origin')
   core.endGroup()
@@ -131,6 +132,8 @@ async function app () {
 
       console.log(` * Package ${packageUnit} (${packagesList[packageUnit].version} -> ${packagesList[packageUnit].pypiVersion})`)
       console.log(`   Update: ${packagesList[packageUnit].updateAvailable}`)
+
+      fs.unlinkSync(packageUnit)
     }
 
     if (updateAvailable) {
@@ -145,7 +148,7 @@ async function app () {
       core.setOutput('commit', 'true')
 
       console.log('Commit and push')
-      await push(reqFilePath)
+      await push(reqFilePath, needBackup)
     }
   } catch (error) {
     core.setFailed(error.message)
