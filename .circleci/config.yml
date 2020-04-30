@@ -7,6 +7,12 @@ jobs:
       name: node/default
     steps:
       - checkout
+      - run:
+          name: Check branch
+          command: |
+            if [ "$CIRCLE_BRANCH" = "release-master" ]; then
+                circleci-agent step halt
+            fi
       - node/with-cache:
           steps:
             - run: npm install
