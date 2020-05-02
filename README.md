@@ -4,6 +4,7 @@
 ![GitHub Release Date](https://img.shields.io/github/release-date/Verbalinsurection/track-pypi-version)
 [![GitHub](https://img.shields.io/github/license/Verbalinsurection/track-pypi-version)](LICENSE)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4c588c4c7fd143169684bd8643d975f3)](https://www.codacy.com/manual/t.stassinopoulos/track-pypi-version?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Verbalinsurection/track-pypi-version&amp;utm_campaign=Badge_Grade)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Verbalinsurection_track-pypi-version&metric=alert_status)](https://sonarcloud.io/dashboard?id=Verbalinsurection_track-pypi-version)
 [![CircleCI](https://circleci.com/gh/Verbalinsurection/track-pypi-version/tree/master.svg?style=svg)](https://circleci.com/gh/Verbalinsurection/track-pypi-version/tree/master)
 ![Push pre-built action](https://github.com/Verbalinsurection/track-pypi-version/workflows/Push%20pre-built%20action/badge.svg)
 
