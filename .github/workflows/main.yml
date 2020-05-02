@@ -31,3 +31,4 @@ jobs:
       uses: satackey/push-js-action@release-master
       with:
         push-branch: release-${{ steps.name.outputs.branch }}
+        commit-message: "[auto] [ci skip] Build release"
