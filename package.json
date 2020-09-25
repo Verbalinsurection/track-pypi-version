@@ -4,7 +4,7 @@
   "description": "Track Python package from requirements.txt, check if newer version exist in PyPI and provide update info",
   "main": "index.js",
   "dependencies": {
-    "@actions/core": "^1.2.5",
+    "@actions/core": "^1.2.6",
     "@actions/github": "^4.0.0",
     "actions-exec-listener": "0.0.2",
     "request": "^2.88.2",
