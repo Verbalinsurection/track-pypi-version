@@ -1,26 +1,22 @@
-name: "track-pypi-version"
-
-description:
-  "Check for updated package on requirements.txt from PyPI, update and commit change on requirements.txt file"
-
+name: track-pypi-version
+description: >-
+  Check for updated package on requirements.txt from PyPI, update and commit
+  change on requirements.txt file
 branding:
   icon: git-commit
   color: white
-
 inputs:
   reqfile:
-    description: "Path to requirements.txt file. Default to /requirements.txt"
+    description: Path to requirements.txt file. Default to /requirements.txt
     required: false
-    default: "/requirements.txt"
+    default: /requirements.txt
   backup:
-    description: "Make a backup of requirements.txt (set to true). Default to false"
+    description: Make a backup of requirements.txt (set to true). Default to false
     required: false
-    default: "false"
-
+    default: 'false'
 outputs:
   commit:
-    description: "'true' if need a commit"
-
+    description: '''true'' if need a commit'
 runs:
-  using: "node12"
-  main: "index.js"
+  using: node12
+  main: dist/index.js/index.js
