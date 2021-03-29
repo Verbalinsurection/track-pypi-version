@@ -1,19 +1,19 @@
 const core = require('@actions/core')
 const github = require('@actions/github')
-var fs = require('fs')
-var request = require('request')
+const fs = require('fs')
+const request = require('request')
 const exec = require('actions-exec-listener')
 
 function parseReqFile (reqFilePath, packagesList) {
-  var packagesListRaw = fs.readFileSync(reqFilePath).toString().split('\n')
+  const packagesListRaw = fs.readFileSync(reqFilePath).toString().split('\n')
 
-  var packageEntry
+  let packageEntry
   for (packageEntry in packagesListRaw) {
     if (packagesListRaw[packageEntry].trim()) {
       var packageName
       var packageVersion
       if (packagesListRaw[packageEntry].includes('==')) {
-        var packageEntrySplit = packagesListRaw[packageEntry].split('==')
+        const packageEntrySplit = packagesListRaw[packageEntry].split('==')
         packageName = packageEntrySplit[0].trim()
         packageVersion = packageEntrySplit[1].trim()
       } else {
@@ -48,7 +48,7 @@ async function downloadFile (url, fileName) {
 
 function parsePyPIVersion (fileName, setVersion) {
   try {
-    var data = fs.readFileSync(fileName, 'utf8')
+    const data = fs.readFileSync(fileName, 'utf8')
 
     const XmlReader = require('xml-reader')
     const ast = XmlReader.parseSync(data)
@@ -64,14 +64,14 @@ function parsePyPIVersion (fileName, setVersion) {
 }
 
 function writeNewReqFile (reqFilePath, packagesList) {
-  var reqStream = fs.createWriteStream(reqFilePath, {
+  const reqStream = fs.createWriteStream(reqFilePath, {
     flags: 'w'
   })
     .on('error', (error) => {
       throw (error)
     })
 
-  var packageUnit
+  let packageUnit
   for (packageUnit in packagesList) {
     reqStream.write(`${packageUnit}==${packagesList[packageUnit].pypiVersion}\n`)
   }
@@ -98,25 +98,25 @@ async function app () {
     const reqFilePath = core.getInput('reqfile')
     console.log(`Requirements file: ${reqFilePath}`)
 
-    var needBackup = false
+    let needBackup = false
     if (core.getInput('backup') === 'true') needBackup = true
     console.log(`Make requirements.txt backup: ${needBackup}`)
 
-    var packagesList = {}
+    const packagesList = {}
     parseReqFile(reqFilePath, packagesList)
 
     console.log(`${Object.keys(packagesList).length} python packages`)
-    var packageUnit
+    let packageUnit
     for (packageUnit in packagesList) {
       console.log(` * ${packageUnit}: ${packagesList[packageUnit].version}`)
     }
 
-    var updateAvailable = false
+    let updateAvailable = false
     console.log('Check for update')
     for (packageUnit in packagesList) {
       await downloadFile(`https://libraries.io/pypi/${packageUnit}/versions.atom`, packageUnit)
 
-      var pypiVersion = { Value: 0 }
+      const pypiVersion = { Value: 0 }
       if (parsePyPIVersion(packageUnit, pypiVersion)) {
         packagesList[packageUnit].pypiVersion = pypiVersion.Value
         if (packagesList[packageUnit].version !== pypiVersion.Value) {
