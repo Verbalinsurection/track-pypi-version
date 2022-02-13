@@ -17,6 +17,10 @@ You can use built version on release-master branch
 
 ## Inputs
 
+### `compush`
+
+**Optionnal** Specify if commit and push need to be done. Default to `true`
+
 ### `reqfile`
 
 **Optionnal** Path to `requirements.txt` file. Default to `/requirements.txt`
@@ -30,3 +34,32 @@ You can use built version on release-master branch
 ### `commit`
 
 If true, need to commit the new requirements.txt file
+
+## Example of use
+
+``` yaml
+on:
+  push:
+    branches:
+      - 'main'
+      - 'master'
+    schedule:
+      - cron: '0 6 * * *'
+
+jobs:
+  check_dep:
+    runs-on: ubuntu-latest
+    name: Check python requirements file and update
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check requirements.txt
+        uses: Verbalinsurection/track-pypi-version@1.1.0
+        id: checkr
+        with:
+          compush: 'true'
+          backup: 'false'
+          reqfile: './requirements.txt'
+      - name: Get if update needed output
+        run: echo ${{ steps.checkr.outputs.commit }}
+```

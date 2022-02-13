@@ -8,10 +8,14 @@ branding:
   color: white
 
 inputs:
-  reqfile:
-    description: "Path to requirements.txt file. Default to /requirements.txt"
+  compush:
+    description: "Specify if commit and push need to be done. Default to true"
     required: false
-    default: "/requirements.txt"
+    default: "true"
+  reqfile:
+    description: "Path to requirements.txt file. Default to ./requirements.txt"
+    required: false
+    default: "./requirements.txt"
   backup:
     description: "Make a backup of requirements.txt (set to true). Default to false"
     required: false
@@ -23,4 +27,4 @@ outputs:
 
 runs:
   using: "node12"
-  main: "index.js"
+  main: "dist/index.js"
