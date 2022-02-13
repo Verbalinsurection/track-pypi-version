@@ -1,7 +1,8 @@
 const core = require('@actions/core')
 const github = require('@actions/github')
 const fs = require('fs')
-const request = require('request')
+const fetch = require('node-fetch')
+const xml2js = require('xml2js')
 const exec = require('actions-exec-listener')
 
 function parseReqFile (reqFilePath, packagesList) {
@@ -10,8 +11,8 @@ function parseReqFile (reqFilePath, packagesList) {
   let packageEntry
   for (packageEntry in packagesListRaw) {
     if (packagesListRaw[packageEntry].trim()) {
-      var packageName
-      var packageVersion
+      let packageName
+      let packageVersion
       if (packagesListRaw[packageEntry].includes('==')) {
         const packageEntrySplit = packagesListRaw[packageEntry].split('==')
         packageName = packageEntrySplit[0].trim()
@@ -27,40 +28,23 @@ function parseReqFile (reqFilePath, packagesList) {
   }
 }
 
-async function downloadFile (url, fileName) {
-  const file = fs.createWriteStream(fileName)
-  await new Promise((resolve, reject) => {
-    request({
-      uri: url
+async function getPyPiVersion (packageId) {
+  const packageUrl = `https://libraries.io/pypi/${packageId}/versions.atom`
+  const response = await fetch(packageUrl)
+
+  if (response.ok) {
+    const body = await response.text()
+    const parser = new xml2js.Parser()
+    let extractData
+    parser.parseString(body, function (err, result) {
+      if (!err && Object.keys(result)) {
+        extractData = result.feed.entry[0].title.toString()
+      }
     })
-      .pipe(file)
-      .on('finish', () => {
-        resolve()
-      })
-      .on('error', (error) => {
-        reject(error)
-      })
-  })
-    .catch(error => {
-      console.log(`Something happened: ${error}`)
-    })
-}
-
-function parsePyPIVersion (fileName, setVersion) {
-  try {
-    const data = fs.readFileSync(fileName, 'utf8')
-
-    const XmlReader = require('xml-reader')
-    const ast = XmlReader.parseSync(data)
-    const XmlQuery = require('xml-query')
-
-    setVersion.Value = XmlQuery(ast).children().find('entry').find('title').first().text()
-  } catch (e) {
-    console.log('No DOM: ' + e)
-    return false
+    return extractData
+  } else {
+    return null
   }
-
-  return true
 }
 
 function writeNewReqFile (reqFilePath, packagesList) {
@@ -93,63 +77,67 @@ const push = async (reqFilePath, needBackup) => {
 
 async function app () {
   try {
-    console.log(`Repo: ${github.context.repo.owner}/${github.context.repo.repo}`)
+    const pjson = require('./package.json')
+    console.log(`🚀 ${pjson.name} - Version: ${pjson.version} 🚀`)
+    console.log(` ➡️ Repo: ${github.context.repo.owner}/${github.context.repo.repo}`)
 
-    const reqFilePath = core.getInput('reqfile')
-    console.log(`Requirements file: ${reqFilePath}`)
+    let comPush = false
+    if (core.getInput('compush') === 'true') comPush = true
+    console.log(` ➡️ Commit and push: ${comPush}`)
+
+    const reqFilePath = core.getInput('reqfile') || './requirements.txt'
+    console.log(` ➡️ Requirements file: ${reqFilePath}`)
 
     let needBackup = false
     if (core.getInput('backup') === 'true') needBackup = true
-    console.log(`Make requirements.txt backup: ${needBackup}`)
+    console.log(` ➡️ Make requirements.txt backup: ${needBackup}`)
 
     const packagesList = {}
     parseReqFile(reqFilePath, packagesList)
 
-    console.log(`${Object.keys(packagesList).length} python packages`)
+    console.log(`🐍 ${Object.keys(packagesList).length} python packages found:`)
     let packageUnit
     for (packageUnit in packagesList) {
-      console.log(` * ${packageUnit}: ${packagesList[packageUnit].version}`)
+      console.log(` ➡️ ${packageUnit}: ${packagesList[packageUnit].version}`)
     }
 
+    console.log('🛠️ Check for update')
     let updateAvailable = false
-    console.log('Check for update')
     for (packageUnit in packagesList) {
-      await downloadFile(`https://libraries.io/pypi/${packageUnit}/versions.atom`, packageUnit)
+      const versionPypi = await getPyPiVersion(packageUnit)
 
-      const pypiVersion = { Value: 0 }
-      if (parsePyPIVersion(packageUnit, pypiVersion)) {
-        packagesList[packageUnit].pypiVersion = pypiVersion.Value
-        if (packagesList[packageUnit].version !== pypiVersion.Value) {
+      if (versionPypi) {
+        packagesList[packageUnit].pypiVersion = versionPypi
+        if (packagesList[packageUnit].version !== packagesList[packageUnit].pypiVersion) {
           packagesList[packageUnit].updateAvailable = true
           updateAvailable = true
         } else {
           packagesList[packageUnit].updateAvailable = false
         }
       } else {
-        packagesList[packageUnit].pypiVersion = null
+        packagesList[packageUnit].pypiVersion = packagesList[packageUnit].version
         packagesList[packageUnit].updateAvailable = false
       }
 
-      console.log(` * Package ${packageUnit} (${packagesList[packageUnit].version} -> ${packagesList[packageUnit].pypiVersion})`)
-      console.log(`   Update: ${packagesList[packageUnit].updateAvailable}`)
-
-      fs.unlinkSync(packageUnit)
+      const upTag = (packagesList[packageUnit].updateAvailable) ? '⚠️' : '✅'
+      console.log(` ${upTag} Package ${packageUnit} (${packagesList[packageUnit].version} -> ${packagesList[packageUnit].pypiVersion})`)
     }
 
     if (updateAvailable) {
       if (needBackup) {
-        console.log('Backup requirements file')
+        console.log('🛠️ Backup requirements file')
         fs.renameSync(reqFilePath, `${reqFilePath}.old`)
       }
 
-      console.log('Update requirements file')
+      console.log('🛠️ Update requirements file')
       writeNewReqFile(reqFilePath, packagesList)
 
-      core.setOutput('commit', 'true')
-
-      console.log('Commit and push')
-      await push(reqFilePath, needBackup)
+      if (comPush) {
+        console.log('🐱 Commit and push')
+        await push(reqFilePath, needBackup)
+      }
     }
+    core.setOutput('commit', updateAvailable)
   } catch (error) {
     core.setFailed(error.message)
   }

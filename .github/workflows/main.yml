@@ -3,32 +3,30 @@ name: Push pre-built action
 on:
   push:
     branches:
-    - 'master'
+      - 'master'
+      - 'main'
 
 jobs:
-  build_and_push:
-    runs-on: ubuntu-18.04
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Setup node.js
-      uses: actions/setup-node@v2.5.1
-      with:
-        node-version: 12.x
+      - name: Setup node.js
+        uses: actions/setup-node@v2.5.1
+        with:
+          node-version: 17.x
 
-    - name: Checkout
-      uses: actions/checkout@v2.4.0
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
 
-    - name: Install dependencies
-      run: |
-        yarn install --frozen-lockfile --non-interactive
+      - name: Install dependencies
+        run: |
+          npm install
 
-    - name: Output branch name
-      id: name
-      run: |
-        echo "##[set-output name=branch;]${GITHUB_REF#refs/heads/}"
+      - name: Install ncc
+        run: |
+          npm install @vercel/ncc
 
-    - name: Push
-      uses: satackey/push-js-action@release-master
-      with:
-        push-branch: release-${{ steps.name.outputs.branch }}
-        commit-message: "[auto] [ci skip] Build release"
+      - name: Build index.js
+        run: |
+          npm run build
