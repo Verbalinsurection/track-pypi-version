@@ -8,7 +8,7 @@
     "@actions/github": "^5.0.0",
     "actions-exec-listener": "^0.1.0",
     "node-fetch": "^2.6.7",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.5.0"
   },
   "devDependencies": {
     "eslint": "^8.9.0",
